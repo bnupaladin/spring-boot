@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,15 +16,18 @@
 
 package sample.test.service;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 import sample.test.domain.VehicleIdentificationNumber;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.HttpServerErrorException;
 
@@ -39,6 +42,8 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
  *
  * @author Phillip Webb
  */
+@RunWith(SpringRunner.class)
+@RestClientTest({ RemoteVehicleDetailsService.class, ServiceProperties.class })
 public class RemoteVehicleDetailsServiceTests {
 
 	private static final String VIN = "00000000000000000";
@@ -46,29 +51,22 @@ public class RemoteVehicleDetailsServiceTests {
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
+	@Autowired
 	private RemoteVehicleDetailsService service;
 
+	@Autowired
 	private MockRestServiceServer server;
 
-	@Before
-	public void setup() {
-		ServiceProperties properties = new ServiceProperties();
-		properties.setVehicleServiceRootUrl("http://example.com/");
-		this.service = new RemoteVehicleDetailsService(properties);
-		this.server = MockRestServiceServer.createServer(this.service.getRestTemplate());
-	}
-
 	@Test
-	public void getVehicleDetailsWhenVinIsNullShouldThrowException() throws Exception {
+	public void getVehicleDetailsWhenVinIsNullShouldThrowException() {
 		this.thrown.expect(IllegalArgumentException.class);
 		this.thrown.expectMessage("VIN must not be null");
 		this.service.getVehicleDetails(null);
 	}
 
 	@Test
-	public void getVehicleDetailsWhenResultIsSuccessShouldReturnDetails()
-			throws Exception {
-		this.server.expect(requestTo("http://example.com/vehicle/" + VIN + "/details"))
+	public void getVehicleDetailsWhenResultIsSuccessShouldReturnDetails() {
+		this.server.expect(requestTo("/vehicle/" + VIN + "/details"))
 				.andRespond(withSuccess(getClassPathResource("vehicledetails.json"),
 						MediaType.APPLICATION_JSON));
 		VehicleDetails details = this.service
@@ -78,18 +76,16 @@ public class RemoteVehicleDetailsServiceTests {
 	}
 
 	@Test
-	public void getVehicleDetailsWhenResultIsNotFoundShouldThrowException()
-			throws Exception {
-		this.server.expect(requestTo("http://example.com/vehicle/" + VIN + "/details"))
+	public void getVehicleDetailsWhenResultIsNotFoundShouldThrowException() {
+		this.server.expect(requestTo("/vehicle/" + VIN + "/details"))
 				.andRespond(withStatus(HttpStatus.NOT_FOUND));
 		this.thrown.expect(VehicleIdentificationNumberNotFoundException.class);
 		this.service.getVehicleDetails(new VehicleIdentificationNumber(VIN));
 	}
 
 	@Test
-	public void getVehicleDetailsWhenResultIServerErrorShouldThrowException()
-			throws Exception {
-		this.server.expect(requestTo("http://example.com/vehicle/" + VIN + "/details"))
+	public void getVehicleDetailsWhenResultIServerErrorShouldThrowException() {
+		this.server.expect(requestTo("/vehicle/" + VIN + "/details"))
 				.andRespond(withServerError());
 		this.thrown.expect(HttpServerErrorException.class);
 		this.service.getVehicleDetails(new VehicleIdentificationNumber(VIN));

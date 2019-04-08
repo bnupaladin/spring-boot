@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,28 +47,28 @@ public class UserEntityTests {
 	private TestEntityManager entityManager;
 
 	@Test
-	public void createWhenUserIdIsNullShouldThrowException() throws Exception {
+	public void createWhenUsernameIsNullShouldThrowException() {
 		this.thrown.expect(IllegalArgumentException.class);
 		this.thrown.expectMessage("Username must not be empty");
 		new User(null, VIN);
 	}
 
 	@Test
-	public void createWhenUserIdIsEmptyShouldThrowException() throws Exception {
+	public void createWhenUsernameIsEmptyShouldThrowException() {
 		this.thrown.expect(IllegalArgumentException.class);
 		this.thrown.expectMessage("Username must not be empty");
 		new User("", VIN);
 	}
 
 	@Test
-	public void createWhenVinIsNullShouldThrowException() throws Exception {
+	public void createWhenVinIsNullShouldThrowException() {
 		this.thrown.expect(IllegalArgumentException.class);
 		this.thrown.expectMessage("VIN must not be null");
 		new User("sboot", null);
 	}
 
 	@Test
-	public void saveShouldPersistData() throws Exception {
+	public void saveShouldPersistData() {
 		User user = this.entityManager.persistFlushFind(new User("sboot", VIN));
 		assertThat(user.getUsername()).isEqualTo("sboot");
 		assertThat(user.getVin()).isEqualTo(VIN);

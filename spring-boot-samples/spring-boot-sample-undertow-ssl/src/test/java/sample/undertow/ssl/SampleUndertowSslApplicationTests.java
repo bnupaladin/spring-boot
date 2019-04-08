@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2016 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,22 +16,16 @@
 
 package sample.undertow.ssl;
 
-import org.apache.http.client.HttpClient;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContextBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.springframework.boot.context.web.LocalServerPort;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.web.server.AbstractConfigurableWebServerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,26 +37,22 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@DirtiesContext
 public class SampleUndertowSslApplicationTests {
 
-	@LocalServerPort
-	private int port;
+	@Autowired
+	private TestRestTemplate restTemplate;
+
+	@Autowired
+	private AbstractConfigurableWebServerFactory webServerFactory;
 
 	@Test
-	public void testHome() throws Exception {
-		SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(
-				new SSLContextBuilder()
-						.loadTrustMaterial(null, new TrustSelfSignedStrategy()).build());
+	public void testSsl() {
+		assertThat(this.webServerFactory.getSsl().isEnabled()).isTrue();
+	}
 
-		HttpClient httpClient = HttpClients.custom().setSSLSocketFactory(socketFactory)
-				.build();
-
-		TestRestTemplate testRestTemplate = new TestRestTemplate();
-		((HttpComponentsClientHttpRequestFactory) testRestTemplate.getRequestFactory())
-				.setHttpClient(httpClient);
-		ResponseEntity<String> entity = testRestTemplate
-				.getForEntity("https://localhost:" + this.port, String.class);
+	@Test
+	public void testHome() {
+		ResponseEntity<String> entity = this.restTemplate.getForEntity("/", String.class);
 		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(entity.getBody()).isEqualTo("Hello World");
 	}
